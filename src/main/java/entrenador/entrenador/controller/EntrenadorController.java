@@ -18,4 +18,5 @@ public class EntrenadorController {
         return ResponseEntity.ok(entrenadorService.obtenerTodos());
     }
 
+    //
 }
