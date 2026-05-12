@@ -22,6 +22,4 @@ public class EntrenadorRequestDTO {
     @NotBlank(message = "La fecha de nacimiento no pueda estar vacia")
     private Date fechaNacimiento;
 
-    @NotNull(message = "El entrenadorId es obligatorio")
-    private Long entrenadorId;
 }
