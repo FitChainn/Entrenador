@@ -2,24 +2,27 @@ package entrenador.entrenador.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class EntrenadorRequestDTO {
 
-    @NotBlank(message = "El run no puede estar vacio")
+    @NotBlank(message = "El RUN es obligatorio.")
+    @Size(min = 9, max = 13, message = "El RUN debe tener un formato válido.")
     private String run;
 
-    @NotBlank(message = "El nombre no puede estar vacio")
+    @NotBlank(message = "El nombre no puede estar vacío.")
     private String nombre;
 
-    @NotBlank(message = "La fecha de nacimiento no pueda estar vacia")
-    private Date fechaNacimiento;
+    @NotBlank(message = "La especialidad es obligatoria.")
+    private String especialidad;
 
+    @NotNull(message = "La fecha de nacimiento es obligatoria.")
+    private LocalDate fechaNacimiento;
 }
