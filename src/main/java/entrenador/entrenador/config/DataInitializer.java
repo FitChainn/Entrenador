@@ -26,10 +26,10 @@ public class DataInitializer implements CommandLineRunner {
 
         log.info(">>> DataInitializer: BD vacía detectada, insertando datos de prueba...");
 
-        entrenadorRepository.save(new Entrenador(null,"19.482.021-0", "Guillermo Salas", LocalDate.parse(1980,12,10)));
-        entrenadorRepository.save(new Entrenador(null,"20.493.492-1", "Marcelo Donal", LocalDate.parse(2001,1,16)));
-        entrenadorRepository.save(new Entrenador(null,"19.902.142-k","Juan Perez", LocalDate.parse(1990, 9, 21)));
-        entrenadorRepository.save(new Entrenador(null,"21.901.389-2","Cristofer Cifuentes", LocalDate.parse(2005,7,28)));
+        entrenadorRepository.save(new Entrenador(null,"19.482.021-0", "Guillermo Salas", "Crossfit", LocalDate.of(1980,12,10)));
+        entrenadorRepository.save(new Entrenador(null,"20.493.492-1", "Marcelo Donal", "Pesas", LocalDate.of(2001,1,16)));
+        entrenadorRepository.save(new Entrenador(null,"19.902.142-k","Juan Perez","Nutricionista", LocalDate.of(1990, 9, 21)));
+        entrenadorRepository.save(new Entrenador(null,"21.901.389-2","Cristofer Cifuentes","Rehabilitacion", LocalDate.of(2005,7,28)));
         log.info(">>> DataInitializer: {} Entrenadores insertados correctamente.",
                 entrenadorRepository.count());
     }

@@ -1,9 +1,11 @@
 package entrenador.entrenador.controller;
 
 
+import entrenador.entrenador.dto.EntrenadorRequestDTO;
 import entrenador.entrenador.dto.EntrenadorResponseDTO;
 import entrenador.entrenador.model.Entrenador;
 import entrenador.entrenador.service.EntrenadorService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/entrenadores")
 public class EntrenadorController {
-
+    @Autowired
     private EntrenadorService entrenadorService;
 
     @GetMapping
@@ -32,13 +34,13 @@ public class EntrenadorController {
     }
 
     @PostMapping
-    public ResponseEntity<Entrenador> RegistrarEntrenador(@RequestBody Entrenador nuevo) {
-        return ResponseEntity.status(201).body(entrenadorService.saveEntrenador(nuevo));
+    public ResponseEntity<EntrenadorResponseDTO> RegistrarEntrenador(@RequestBody EntrenadorRequestDTO nuevo) {
+        return ResponseEntity.status(201).body(entrenadorService.guardarEntrenador(nuevo));
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Void> eliminar (@PathVariable Long id){
-        if(entrenadorService.obtenerEntrenador(id).isEmpty()){
+    public ResponseEntity<?> eliminar (@PathVariable Long id){
+        if(entrenadorService.obtenerPorId(id).isEmpty()){
             return ResponseEntity.notFound().build();
         }
         entrenadorService.eliminarPorId(id);
