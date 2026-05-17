@@ -1,9 +1,11 @@
 package entrenador.entrenador.controller;
 
 
+import entrenador.entrenador.dto.EntrenadorCliente;
 import entrenador.entrenador.dto.EntrenadorRequestDTO;
 import entrenador.entrenador.dto.EntrenadorResponseDTO;
 import entrenador.entrenador.model.Entrenador;
+import entrenador.entrenador.repository.EntrenadorRepository;
 import entrenador.entrenador.service.EntrenadorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,8 @@ import java.util.List;
 public class EntrenadorController {
     @Autowired
     private EntrenadorService entrenadorService;
+    @Autowired
+    private EntrenadorRepository entrenadorRepository;
 
     @GetMapping
     public ResponseEntity <List<EntrenadorResponseDTO>> obtenerTodos(){
@@ -45,5 +49,14 @@ public class EntrenadorController {
         }
         entrenadorService.eliminarPorId(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/{id}/simple")
+    public ResponseEntity<EntrenadorCliente> obtenerEntrenadorSimple(@PathVariable Long id) {
+        Entrenador entrenador = entrenadorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Entrenador no encontrado"));
+        return ResponseEntity.ok(new EntrenadorCliente(
+                entrenador.getNombre(),
+                entrenador.getEspecialidad()
+        ));
     }
 }

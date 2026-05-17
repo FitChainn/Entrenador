@@ -17,10 +17,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class EntrenadorService {
-    private EntrenadorRepository entrenadorRepository;
+    @Autowired
+    private  EntrenadorRepository entrenadorRepository;
+    @Autowired
+    private WebClient.Builder webClientBuilder;
 
     private EntrenadorResponseDTO mapToDTO(Entrenador entrenador) {
         return new EntrenadorResponseDTO(
@@ -36,34 +38,42 @@ public class EntrenadorService {
     public List<EntrenadorResponseDTO> obtenerTodos() {
         return entrenadorRepository.findAll()
                 .stream()
-                .map(this::mapToDTO)
+                .map(entrenador -> {
+                    EntrenadorResponseDTO dto = mapToDTO(entrenador);
+                    try {
+                        List<Object> alumnos = webClientBuilder.build()
+                                .get()
+                                .uri("http://localhost:8081/v1/clientes/entrenador/{id}/simple", entrenador.getId())
+                                .retrieve()
+                                .bodyToFlux(Object.class)
+                                .collectList()
+                                .block();
+                        dto.setAlumnos(alumnos);
+                    } catch (Exception e) {
+                        dto.setAlumnos(List.of());
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
-
     public Optional<EntrenadorResponseDTO> obtenerPorId(Long id) {
         return entrenadorRepository.findById(id).map(entrenador -> {
             EntrenadorResponseDTO dto = mapToDTO(entrenador);
-
             try {
-                // Viajamos al microservicio de Clientes a buscar los alumnos asignados
-                List<ClienteResponseDTO> alumnosAsignados = webClientBuilder.build()
+                List<Object> alumnos = webClientBuilder.build()
                         .get()
-                        .uri("http://localhost:8081/v1/clientes/entrenador/{id}", id)
+                        .uri("http://localhost:8081/v1/clientes/entrenador/{id}/simple", id)
                         .retrieve()
-                        .bodyToFlux(ClienteResponseDTO.class)
+                        .bodyToFlux(Object.class)
                         .collectList()
-                        .block(); // Llamada síncrona
-
-                dto.setAlumnos(alumnosAsignados);
+                        .block();
+                dto.setAlumnos(alumnos);
             } catch (Exception e) {
-                // Si el microservicio de clientes está apagado, se envía la lista vacía para que no se caiga todo el sistema
                 dto.setAlumnos(List.of());
             }
-
             return dto;
         });
     }
-
     public EntrenadorResponseDTO guardarEntrenador(EntrenadorRequestDTO dto) {
         Entrenador entrenador = new Entrenador();
         entrenador.setRun(dto.getRun());
