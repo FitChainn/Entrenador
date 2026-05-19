@@ -16,4 +16,5 @@ public class EntrenadorResponseDTO {
     private String especialidad;
     private LocalDate fechaNacimiento;
     private List<Object> alumnos; // Se llena mediante comunicación con microservicio Cliente
+    private Long establecimientoId;
 }

@@ -59,4 +59,19 @@ public class EntrenadorController {
                 entrenador.getEspecialidad()
         ));
     }
+    @GetMapping("/establecimiento/{establecimientoId}")
+    public ResponseEntity<List<EntrenadorResponseDTO>> obtenerPorEstablecimiento(
+            @PathVariable Long establecimientoId) {
+        List<EntrenadorResponseDTO> entrenadores = entrenadorService.obtenerPorEstablecimiento(establecimientoId);
+        if (entrenadores.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(entrenadores);
+    }
+    @PutMapping("/{entrenadorId}/establecimiento/{establecimientoId}")
+    public ResponseEntity<EntrenadorResponseDTO> asignarEstablecimiento(
+            @PathVariable Long entrenadorId,
+            @PathVariable Long establecimientoId) {
+        return ResponseEntity.ok(entrenadorService.asignarEstablecimiento(entrenadorId, establecimientoId));
+    }
 }

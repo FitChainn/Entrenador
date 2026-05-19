@@ -25,4 +25,6 @@ public class EntrenadorRequestDTO {
 
     @NotNull(message = "La fecha de nacimiento es obligatoria.")
     private LocalDate fechaNacimiento;
+    @NotBlank(message = "El establecimiento es obligatorio")
+    private Long establecimientoId;
 }

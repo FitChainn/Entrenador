@@ -28,4 +28,6 @@ public class Entrenador {
 
     @Column(nullable = false)
     private LocalDate fechaNacimiento; // Usar LocalDate para evitar errores de hora/zona horaria
+    @Column(name = "establecimiento_id")
+    private Long establecimientoId;
 }

@@ -9,5 +9,6 @@ import java.util.List;
 
 
 public interface EntrenadorRepository extends JpaRepository<Entrenador, Long> {
+    List<Entrenador> findByEstablecimientoId(Long establecimientoId);
 
 }
