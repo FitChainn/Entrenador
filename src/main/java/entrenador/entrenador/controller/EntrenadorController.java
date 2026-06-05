@@ -6,13 +6,17 @@ import entrenador.entrenador.dto.EntrenadorResponseDTO;
 import entrenador.entrenador.model.Entrenador;
 import entrenador.entrenador.repository.EntrenadorRepository;
 import entrenador.entrenador.service.EntrenadorService;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
+@Slf4j
 @RestController
 @RequestMapping("/v1/entrenadores")
 public class EntrenadorController {
@@ -40,12 +44,12 @@ public class EntrenadorController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<EntrenadorResponseDTO> RegistrarEntrenador(@RequestBody EntrenadorRequestDTO nuevo) {
+    public ResponseEntity<EntrenadorResponseDTO> registrarEntrenador(@Valid @RequestBody EntrenadorRequestDTO nuevo) {
         return ResponseEntity.status(201).body(entrenadorService.guardarEntrenador(nuevo));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Long id) {
         if (entrenadorService.obtenerPorId(id).isEmpty()) return ResponseEntity.notFound().build();
         entrenadorService.eliminarPorId(id);
@@ -56,7 +60,7 @@ public class EntrenadorController {
     @GetMapping("/{id}/simple")
     public ResponseEntity<EntrenadorCliente> obtenerEntrenadorSimple(@PathVariable Long id) {
         Entrenador entrenador = entrenadorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Entrenador no encontrado"));
+                .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado con ID: " + id));
         return ResponseEntity.ok(new EntrenadorCliente(entrenador.getNombre(), entrenador.getEspecialidad()));
     }
 
@@ -75,5 +79,15 @@ public class EntrenadorController {
             @PathVariable Long entrenadorId,
             @PathVariable Long establecimientoId) {
         return ResponseEntity.ok(entrenadorService.asignarEstablecimiento(entrenadorId, establecimientoId));
+    }
+
+    // Endpoint nuevo — ADMIN y ENTRENADOR pueden asignar clientes
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR')")
+    @PutMapping("/{entrenadorId}/cliente/{clienteId}")
+    public ResponseEntity<?> asignarCliente(
+            @PathVariable Long entrenadorId,
+            @PathVariable Long clienteId) {
+        entrenadorService.asignarCliente(entrenadorId, clienteId);
+        return ResponseEntity.ok("Cliente " + clienteId + " asignado al entrenador " + entrenadorId);
     }
 }
