@@ -18,7 +18,7 @@ public class OpenApiConfig {
                         .title("Entrenador API - FitChain")
                         .description("API DE GESTIÓN DEL ENTRENADOR")
                         .version("1.0.0")).servers(List.of(
-                                new Server().url("http://44.197.145.9:8081/8082").description("Aws"),
+                                new Server().url("http://44.197.145.9:8081/8082").description("AWS"),
                         new Server().url("http://localhost:8082").description("Local")
                 ));
     }
