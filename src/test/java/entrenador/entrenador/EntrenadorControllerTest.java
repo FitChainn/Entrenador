@@ -1,5 +1,6 @@
 package entrenador.entrenador;
 
+import entrenador.entrenador.assembler.EntrenadorModelAssembler;
 import entrenador.entrenador.config.SecurityConfig;
 import entrenador.entrenador.controller.EntrenadorController;
 import entrenador.entrenador.dto.EntrenadorRequestDTO;
@@ -18,6 +19,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import org.springframework.hateoas.EntityModel;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -45,6 +48,9 @@ public class EntrenadorControllerTest {
     @MockBean
     private EntrenadorRepository entrenadorRepository;
 
+    @MockBean
+    private EntrenadorModelAssembler assembler;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -57,6 +63,7 @@ public class EntrenadorControllerTest {
         entrenador = new Entrenador(1L, "12.345.678-9", "PEPE ENTRENADOR", "BOXEO", LocalDate.of(1985, 1, 1), 1L);
         eResponse = new EntrenadorResponseDTO(1L, "12.345.678-9", "PEPE ENTRENADOR", "BOXEO", LocalDate.of(1985, 1, 1), Collections.emptyList(), 1L);
         eRequest = new EntrenadorRequestDTO("12.345.678-9", "PEPE ENTRENADOR", "BOXEO", LocalDate.of(1985, 1, 1), 1L);
+        when(assembler.toModel(any(EntrenadorResponseDTO.class))).thenAnswer(inv -> EntityModel.of(inv.getArgument(0)));
     }
 
     @Test
@@ -127,7 +134,8 @@ public class EntrenadorControllerTest {
 
         mockMvc.perform(get("/v1/entrenadores/99")
                         .header("X-User-Rol", "ADMIN"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("ENTRENADOR CON EL ID 99 NO ENCONTRADO"));
     }
 
     @Test
@@ -164,16 +172,6 @@ public class EntrenadorControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    @Test
-    @DisplayName("DEBE ASIGNAR ESTABLECIMIENTO A ENTRENADOR")
-    void PUT_asignarEstablecimiento() throws Exception {
-        when(entrenadorService.asignarEstablecimiento(eq(1L), eq(2L))).thenReturn(eResponse);
-
-        mockMvc.perform(put("/v1/entrenadores/1/establecimiento/2")
-                        .header("X-User-Rol", "ADMIN"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L));
-    }
 
     @Test
     @DisplayName("DEBE ASIGNAR CLIENTE A ENTRENADOR")

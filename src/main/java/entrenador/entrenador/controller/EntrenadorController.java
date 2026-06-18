@@ -1,5 +1,6 @@
 package entrenador.entrenador.controller;
 
+import entrenador.entrenador.assembler.EntrenadorModelAssembler;
 import entrenador.entrenador.dto.EntrenadorCliente;
 import entrenador.entrenador.dto.EntrenadorRequestDTO;
 import entrenador.entrenador.dto.EntrenadorResponseDTO;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +29,11 @@ import java.util.NoSuchElementException;
 public class EntrenadorController {
 
     @Autowired
+    private EntrenadorModelAssembler assembler;
+
+    @Autowired
     private EntrenadorService entrenadorService;
+
     @Autowired
     private EntrenadorRepository entrenadorRepository;
 
@@ -52,10 +58,10 @@ public class EntrenadorController {
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR', 'CLIENTE')")
     @GetMapping("/{id}")
-    public ResponseEntity<EntrenadorResponseDTO> obtenerEntrenador(@PathVariable Long id) {
-        return entrenadorService.obtenerPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<EntityModel<EntrenadorResponseDTO>> obtenerEntrenador(@PathVariable Long id) {
+        EntrenadorResponseDTO entrenador = entrenadorService.obtenerPorId(id)
+                .orElseThrow(() -> new NoSuchElementException("ENTRENADOR CON EL ID " + id + " NO ENCONTRADO"));
+        return ResponseEntity.ok(assembler.toModel(entrenador));
     }
 
     @Operation(summary = "REGISTRAR ENTRENADOR", description = "Crea un nuevo entrenador. Acceso: ADMIN")
@@ -108,19 +114,6 @@ public class EntrenadorController {
         List<EntrenadorResponseDTO> entrenadores = entrenadorService.obtenerPorEstablecimiento(establecimientoId);
         if (entrenadores.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(entrenadores);
-    }
-
-    @Operation(summary = "ASIGNAR ESTABLECIMIENTO A ENTRENADOR", description = "Asigna un establecimiento a un entrenador. Acceso: ADMIN")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "ESTABLECIMIENTO ASIGNADO EXITOSAMENTE"),
-            @ApiResponse(responseCode = "404", description = "ENTRENADOR O ESTABLECIMIENTO NO ENCONTRADO")
-    })
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{entrenadorId}/establecimiento/{establecimientoId}")
-    public ResponseEntity<EntrenadorResponseDTO> asignarEstablecimiento(
-            @PathVariable Long entrenadorId,
-            @PathVariable Long establecimientoId) {
-        return ResponseEntity.ok(entrenadorService.asignarEstablecimiento(entrenadorId, establecimientoId));
     }
 
     @Operation(summary = "ASIGNAR CLIENTE A ENTRENADOR", description = "Asigna un cliente a un entrenador. Acceso: ADMIN, ENTRENADOR")

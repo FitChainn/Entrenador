@@ -2,10 +2,10 @@ package entrenador.entrenador;
 
 import entrenador.entrenador.model.Entrenador;
 import entrenador.entrenador.repository.EntrenadorRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
@@ -16,7 +16,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("PRUEBAS UNITARIAS DEL REPOSITORY DE ENTRENADOR")
 public class EntrenadorRepositoryTest {
 
@@ -25,6 +24,12 @@ public class EntrenadorRepositoryTest {
 
     @Autowired
     private TestEntityManager em;
+
+    @BeforeEach
+    void limpiarBDenMemoria() {
+        repo.deleteAll();
+        em.flush();
+    }
 
     private Entrenador crearEntrenador(String run, String nombre, String especialidad, Long establecimientoId) {
         Entrenador e = new Entrenador();
