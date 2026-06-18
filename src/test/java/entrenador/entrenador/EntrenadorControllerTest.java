@@ -1,12 +1,13 @@
 package entrenador.entrenador;
 
+import entrenador.entrenador.config.SecurityConfig;
 import entrenador.entrenador.controller.EntrenadorController;
 import entrenador.entrenador.dto.EntrenadorRequestDTO;
 import entrenador.entrenador.dto.EntrenadorResponseDTO;
+import entrenador.entrenador.filter.RolHeaderFilter;
+import entrenador.entrenador.model.Entrenador;
 import entrenador.entrenador.repository.EntrenadorRepository;
 import entrenador.entrenador.service.EntrenadorService;
-import entrenador.entrenador.config.SecurityConfig;
-import entrenador.entrenador.filter.RolHeaderFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,13 +25,15 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(EntrenadorController.class)
 @Import({SecurityConfig.class, RolHeaderFilter.class})
+@DisplayName("PRUEBAS UNITARIAS DEL CONTROLLER DE ENTRENADOR")
 public class EntrenadorControllerTest {
 
     @Autowired
@@ -39,21 +42,26 @@ public class EntrenadorControllerTest {
     @MockBean
     private EntrenadorService entrenadorService;
 
+    @MockBean
+    private EntrenadorRepository entrenadorRepository;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     private EntrenadorResponseDTO eResponse;
     private EntrenadorRequestDTO eRequest;
+    private Entrenador entrenador;
 
     @BeforeEach
     void setUp() {
+        entrenador = new Entrenador(1L, "12.345.678-9", "PEPE ENTRENADOR", "BOXEO", LocalDate.of(1985, 1, 1), 1L);
         eResponse = new EntrenadorResponseDTO(1L, "12.345.678-9", "PEPE ENTRENADOR", "BOXEO", LocalDate.of(1985, 1, 1), Collections.emptyList(), 1L);
         eRequest = new EntrenadorRequestDTO("12.345.678-9", "PEPE ENTRENADOR", "BOXEO", LocalDate.of(1985, 1, 1), 1L);
     }
 
     @Test
     @DisplayName("DEBE RETORNAR TODOS LOS ENTRENADORES")
-    void Get_obtenerTodos() throws Exception {
+    void GET_obtenerTodos() throws Exception {
         when(entrenadorService.obtenerTodos()).thenReturn(List.of(eResponse));
 
         mockMvc.perform(get("/v1/entrenadores")
@@ -64,8 +72,18 @@ public class EntrenadorControllerTest {
     }
 
     @Test
+    @DisplayName("DEBE RETORNAR 204 SI NO HAY ENTRENADORES")
+    void GET_obtenerTodos_vacio() throws Exception {
+        when(entrenadorService.obtenerTodos()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/v1/entrenadores")
+                        .header("X-User-Rol", "ADMIN"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
     @DisplayName("DEBE CREAR UN ENTRENADOR (201)")
-    void Post_registrar201() throws Exception {
+    void POST_registrar201() throws Exception {
         when(entrenadorService.guardarEntrenador(any(EntrenadorRequestDTO.class))).thenReturn(eResponse);
 
         mockMvc.perform(post("/v1/entrenadores")
@@ -73,18 +91,33 @@ public class EntrenadorControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(eRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.nombre").value("PEPE ENTRENADOR"));
+    }
+
+    @Test
+    @DisplayName("DEBE RETORNAR ERROR 400 AL CREAR ENTRENADOR CON DATOS INVALIDOS")
+    void POST_validation_registrar() throws Exception {
+        EntrenadorRequestDTO reqInvalido = new EntrenadorRequestDTO();
+
+        mockMvc.perform(post("/v1/entrenadores")
+                        .header("X-User-Rol", "ADMIN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reqInvalido)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("DEBE OBTENER UN ENTRENADOR POR ID")
-    void Get_obtenerPorId() throws Exception {
+    void GET_obtenerPorId() throws Exception {
         when(entrenadorService.obtenerPorId(1L)).thenReturn(Optional.of(eResponse));
 
         mockMvc.perform(get("/v1/entrenadores/1")
                         .header("X-User-Rol", "ADMIN"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("PEPE ENTRENADOR"));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.nombre").value("PEPE ENTRENADOR"))
+                .andExpect(jsonPath("$.especialidad").value("BOXEO"));
     }
 
     @Test
@@ -98,13 +131,71 @@ public class EntrenadorControllerTest {
     }
 
     @Test
+    @DisplayName("DEBE OBTENER ENTRENADOR SIMPLE POR ID")
+    void GET_obtenerEntrenadorSimple() throws Exception {
+        when(entrenadorRepository.findById(1L)).thenReturn(Optional.of(entrenador));
+
+        mockMvc.perform(get("/v1/entrenadores/1/simple")
+                        .header("X-User-Rol", "ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("PEPE ENTRENADOR"))
+                .andExpect(jsonPath("$.especialidad").value("BOXEO"));
+    }
+
+    @Test
+    @DisplayName("DEBE OBTENER ENTRENADORES POR ESTABLECIMIENTO")
+    void GET_obtenerPorEstablecimiento() throws Exception {
+        when(entrenadorService.obtenerPorEstablecimiento(1L)).thenReturn(List.of(eResponse));
+
+        mockMvc.perform(get("/v1/entrenadores/establecimiento/1")
+                        .header("X-User-Rol", "ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].establecimientoId").value(1L));
+    }
+
+    @Test
+    @DisplayName("DEBE RETORNAR 204 SI ESTABLECIMIENTO NO TIENE ENTRENADORES")
+    void GET_obtenerPorEstablecimiento_vacio() throws Exception {
+        when(entrenadorService.obtenerPorEstablecimiento(99L)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/v1/entrenadores/establecimiento/99")
+                        .header("X-User-Rol", "ADMIN"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("DEBE ASIGNAR ESTABLECIMIENTO A ENTRENADOR")
+    void PUT_asignarEstablecimiento() throws Exception {
+        when(entrenadorService.asignarEstablecimiento(eq(1L), eq(2L))).thenReturn(eResponse);
+
+        mockMvc.perform(put("/v1/entrenadores/1/establecimiento/2")
+                        .header("X-User-Rol", "ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L));
+    }
+
+    @Test
+    @DisplayName("DEBE ASIGNAR CLIENTE A ENTRENADOR")
+    void PUT_asignarCliente() throws Exception {
+        doNothing().when(entrenadorService).asignarCliente(1L, 2L);
+
+        mockMvc.perform(put("/v1/entrenadores/1/cliente/2")
+                        .header("X-User-Rol", "ADMIN"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("DEBE ELIMINAR UN ENTRENADOR")
-    void Delete_eliminar() throws Exception {
+    void DELETE_eliminar() throws Exception {
         when(entrenadorService.obtenerPorId(1L)).thenReturn(Optional.of(eResponse));
+        doNothing().when(entrenadorService).eliminarPorId(1L);
 
         mockMvc.perform(delete("/v1/entrenadores/1")
                         .header("X-User-Rol", "ADMIN"))
                 .andExpect(status().isNoContent());
+
+        verify(entrenadorService, times(1)).eliminarPorId(1L);
     }
 
     @Test
