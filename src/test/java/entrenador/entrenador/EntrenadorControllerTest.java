@@ -9,6 +9,7 @@ import entrenador.entrenador.config.SecurityConfig;
 import entrenador.entrenador.filter.RolHeaderFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -38,9 +39,6 @@ public class EntrenadorControllerTest {
     @MockBean
     private EntrenadorService entrenadorService;
 
-    @MockBean
-    private EntrenadorRepository entrenadorRepository;
-
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -54,6 +52,7 @@ public class EntrenadorControllerTest {
     }
 
     @Test
+    @DisplayName("DEBE RETORNAR TODOS LOS ENTRENADORES")
     void Get_obtenerTodos() throws Exception {
         when(entrenadorService.obtenerTodos()).thenReturn(List.of(eResponse));
 
@@ -65,6 +64,7 @@ public class EntrenadorControllerTest {
     }
 
     @Test
+    @DisplayName("DEBE CREAR UN ENTRENADOR (201)")
     void Post_registrar201() throws Exception {
         when(entrenadorService.guardarEntrenador(any(EntrenadorRequestDTO.class))).thenReturn(eResponse);
 
@@ -77,6 +77,7 @@ public class EntrenadorControllerTest {
     }
 
     @Test
+    @DisplayName("DEBE OBTENER UN ENTRENADOR POR ID")
     void Get_obtenerPorId() throws Exception {
         when(entrenadorService.obtenerPorId(1L)).thenReturn(Optional.of(eResponse));
 
@@ -87,11 +88,32 @@ public class EntrenadorControllerTest {
     }
 
     @Test
+    @DisplayName("DEBE RETORNAR 404 SI ENTRENADOR NO EXISTE")
+    void GET_obtenerIdNotFound() throws Exception {
+        when(entrenadorService.obtenerPorId(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/v1/entrenadores/99")
+                        .header("X-User-Rol", "ADMIN"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("DEBE ELIMINAR UN ENTRENADOR")
     void Delete_eliminar() throws Exception {
         when(entrenadorService.obtenerPorId(1L)).thenReturn(Optional.of(eResponse));
 
         mockMvc.perform(delete("/v1/entrenadores/1")
                         .header("X-User-Rol", "ADMIN"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("DEBE RETORNAR 404 AL ELIMINAR ENTRENADOR QUE NO EXISTE")
+    void DELETE_eliminar_noExiste() throws Exception {
+        when(entrenadorService.obtenerPorId(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(delete("/v1/entrenadores/99")
+                        .header("X-User-Rol", "ADMIN"))
+                .andExpect(status().isNotFound());
     }
 }
