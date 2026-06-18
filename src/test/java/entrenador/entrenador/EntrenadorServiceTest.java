@@ -131,31 +131,6 @@ public class EntrenadorServiceTest {
         verify(entrenadorRepository, times(1)).findByEstablecimientoId(99L);
     }
 
-    @Test
-    @DisplayName("DEBE ASIGNAR ESTABLECIMIENTO A ENTRENADOR")
-    void shouldAsignarEstablecimiento() {
-        when(entrenadorRepository.findById(1L)).thenReturn(Optional.of(entrenador));
-        when(entrenadorRepository.save(any(Entrenador.class))).thenReturn(entrenador);
-        when(clienteClient.obtenerAlumnosPorEntrenador(1L)).thenReturn(Collections.emptyList());
-
-        EntrenadorResponseDTO result = entrenadorService.asignarEstablecimiento(1L, 2L);
-
-        assertNotNull(result);
-        verify(entrenadorRepository, times(1)).findById(1L);
-        verify(entrenadorRepository, times(1)).save(any(Entrenador.class));
-    }
-
-    @Test
-    @DisplayName("DEBE LANZAR EXCEPCION AL ASIGNAR ESTABLECIMIENTO A ENTRENADOR QUE NO EXISTE")
-    void shouldThrowWhenAsignarEstablecimientoEntrenadorNotFound() {
-        when(entrenadorRepository.findById(99L)).thenReturn(Optional.empty());
-
-        NoSuchElementException ex = assertThrows(NoSuchElementException.class,
-                () -> entrenadorService.asignarEstablecimiento(99L, 1L));
-
-        assertEquals("Entrenador no encontrado con ID: 99", ex.getMessage());
-        verify(entrenadorRepository, never()).save(any());
-    }
 
     @Test
     @DisplayName("DEBE ASIGNAR CLIENTE A ENTRENADOR")

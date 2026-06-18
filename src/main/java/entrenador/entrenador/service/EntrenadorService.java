@@ -77,13 +77,6 @@ public class EntrenadorService {
         return mapToDTO(guardado);
     }
 
-    public EntrenadorResponseDTO asignarEstablecimiento(Long entrenadorId, Long establecimientoId) {
-        log.info("Asignando establecimiento ID: {} al entrenador ID: {}", establecimientoId, entrenadorId);
-        Entrenador entrenador = entrenadorRepository.findById(entrenadorId)
-                .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado con ID: " + entrenadorId));
-        entrenador.setEstablecimientoId(establecimientoId);
-        return mapToDTOConAlumnos(entrenadorRepository.save(entrenador));
-    }
 
     public void asignarCliente(Long entrenadorId, Long clienteId) {
         log.info("Asignando cliente ID: {} al entrenador ID: {}", clienteId, entrenadorId);
