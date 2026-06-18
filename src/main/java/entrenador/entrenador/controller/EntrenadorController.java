@@ -46,6 +46,7 @@ public class EntrenadorController {
     @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR', 'CLIENTE')")
     @GetMapping
     public ResponseEntity<List<EntrenadorResponseDTO>> obtenerTodos() {
+        log.info("GET /v1/entrenadores - LISTAR TODOS");
         List<EntrenadorResponseDTO> entrenadores = entrenadorService.obtenerTodos();
         if (entrenadores.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(entrenadores);
@@ -59,6 +60,7 @@ public class EntrenadorController {
     @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR', 'CLIENTE')")
     @GetMapping("/{id}")
     public ResponseEntity<EntityModel<EntrenadorResponseDTO>> obtenerEntrenador(@PathVariable Long id) {
+        log.info("GET /v1/entrenadores/{} - BUSCAR POR ID", id);
         EntrenadorResponseDTO entrenador = entrenadorService.obtenerPorId(id)
                 .orElseThrow(() -> new NoSuchElementException("ENTRENADOR CON EL ID " + id + " NO ENCONTRADO"));
         return ResponseEntity.ok(assembler.toModel(entrenador));
@@ -73,6 +75,7 @@ public class EntrenadorController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<EntrenadorResponseDTO> registrarEntrenador(@Valid @RequestBody EntrenadorRequestDTO nuevo) {
+        log.info("POST /v1/entrenadores - REGISTRAR ENTRENADOR nombre={}", nuevo.getNombre());
         return ResponseEntity.status(201).body(entrenadorService.guardarEntrenador(nuevo));
     }
 
@@ -84,6 +87,7 @@ public class EntrenadorController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Long id) {
+        log.info("DELETE /v1/entrenadores/{} - ELIMINAR ENTRENADOR", id);
         if (entrenadorService.obtenerPorId(id).isEmpty()) return ResponseEntity.notFound().build();
         entrenadorService.eliminarPorId(id);
         return ResponseEntity.noContent().build();
@@ -97,6 +101,7 @@ public class EntrenadorController {
     @PreAuthorize("hasAnyRole('ADMIN', 'ENTRENADOR', 'CLIENTE')")
     @GetMapping("/{id}/simple")
     public ResponseEntity<EntrenadorCliente> obtenerEntrenadorSimple(@PathVariable Long id) {
+        log.info("GET /v1/entrenadores/{}/simple - BUSCAR SIMPLE (INTERNO)", id);
         Entrenador entrenador = entrenadorRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado con ID: " + id));
         return ResponseEntity.ok(new EntrenadorCliente(entrenador.getNombre(), entrenador.getEspecialidad()));
@@ -111,6 +116,7 @@ public class EntrenadorController {
     @GetMapping("/establecimiento/{establecimientoId}")
     public ResponseEntity<List<EntrenadorResponseDTO>> obtenerPorEstablecimiento(
             @PathVariable Long establecimientoId) {
+        log.info("GET /v1/entrenadores/establecimiento/{} - BUSCAR POR ESTABLECIMIENTO", establecimientoId);
         List<EntrenadorResponseDTO> entrenadores = entrenadorService.obtenerPorEstablecimiento(establecimientoId);
         if (entrenadores.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(entrenadores);
@@ -126,6 +132,7 @@ public class EntrenadorController {
     public ResponseEntity<?> asignarCliente(
             @PathVariable Long entrenadorId,
             @PathVariable Long clienteId) {
+        log.info("PUT /v1/entrenadores/{}/cliente/{} - ASIGNAR CLIENTE", entrenadorId, clienteId);
         entrenadorService.asignarCliente(entrenadorId, clienteId);
         return ResponseEntity.ok("Cliente " + clienteId + " asignado al entrenador " + entrenadorId);
     }
